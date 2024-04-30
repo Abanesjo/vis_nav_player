@@ -1,4 +1,4 @@
-name: game
+name: final
 channels:
   - conda-forge
 dependencies:
@@ -14,5 +14,5 @@ dependencies:
     - matplotlib>=3.5.3
     - cryptography==41.0.3
     - gdown~=4.7.1
-    - scikit-learn~=1.3.0
-    - vis-nav-game
+    - scikit-learn==1.3.2
+    - vis-nav-game==1.2.1

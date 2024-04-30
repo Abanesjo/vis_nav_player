@@ -34,14 +34,23 @@ class KeyboardPlayerPyGame(Player):
                 self.last_act = Action.QUIT
                 return Action.QUIT
 
+            # if event.type == pygame.KEYDOWN:
+            #     if event.key in self.keymap:
+            #         self.last_act |= self.keymap[event.key]
+            # 
             if event.type == pygame.KEYDOWN:
-                if event.key in self.keymap:
-                    self.last_act |= self.keymap[event.key]
-                else:
-                    self.show_target_images()
+                if event.key == pygame.K_UP:
+                    self.last_act = Action.FORWARD
+                elif event.key == pygame.K_DOWN:
+                    self.last_act = Action.BACKWARD
+                elif event.key == pygame.K_LEFT:
+                    self.last_act = Action.LEFT
+                elif event.key == pygame.K_RIGHT:
+                    self.last_act = Action.RIGHT
             if event.type == pygame.KEYUP:
-                if event.key in self.keymap:
-                    self.last_act ^= self.keymap[event.key]
+                # if event.key in self.keymap:
+                #     self.last_act ^= self.keymap[event.key]
+                self.last_act = Action.IDLE
         return self.last_act
 
     def show_target_images(self):

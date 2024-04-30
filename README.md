@@ -1,7 +1,6 @@
 # Visual Navigation Game (Example Player Code)
 
-This is the course project platform for NYU ROB-GY 6203 Robot Perception. 
-For more information, please reach out to AI4CE lab (cfeng at nyu dot edu).
+This is my solution for the ROB-UY 3023 Robot Vision Class Project
 
 # Instructions for Players
 1. Install
@@ -9,14 +8,12 @@ For more information, please reach out to AI4CE lab (cfeng at nyu dot edu).
 conda update conda
 git clone https://github.com/ai4ce/vis_nav_player.git
 cd vis_nav_player
-conda env create -f environment.yaml
-conda activate game
+conda env create -f environment2.yaml
+conda activate midterm
 ```
 
 2. Play using the default keyboard player
 ```commandline
-python player.py
+rm -rf data/images/*
+python solution.py
 ```
-
-3. Modify the player.py to implement your own solutions, 
-unless you have photographic memories!
