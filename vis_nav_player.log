@@ -1,7 +1,9 @@
-30-Apr-24 15:44:55 - INFO: player.py is using vis_nav_game 1.2.1
-30-Apr-24 15:44:56 - INFO: vis_nav_game.core version=1.2.1
-30-Apr-24 15:44:56 - INFO: Pass checking essential files
-30-Apr-24 15:44:58 - INFO: Start loading the map
-30-Apr-24 15:44:58 - INFO: No rules loaded from the maze.json!
-30-Apr-24 15:45:10 - INFO: Finished loading the map: takes 12.20351767539978 s
-30-Apr-24 15:45:12 - INFO: Target Images processing completed.
+01-May-24 10:14:25 - INFO: player.py is using vis_nav_game 1.2.1
+01-May-24 10:14:26 - INFO: vis_nav_game.core version=1.2.1
+01-May-24 10:14:26 - INFO: Pass checking essential files
+01-May-24 10:14:27 - INFO: Start loading the map
+01-May-24 10:14:27 - INFO: No rules loaded from the maze.json!
+01-May-24 10:14:36 - INFO: Finished loading the map: takes 9.016256332397461 s
+01-May-24 10:14:38 - INFO: Target Images processing completed.
+01-May-24 10:16:11 - INFO: Saving the game, please wait...
+01-May-24 10:16:11 - INFO: Game saved successfully at C:\Users\abane\Documents\work\Robot_Vision\Project\vis_nav_player\data\save\game-20240501-101611.npy.

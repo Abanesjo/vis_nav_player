@@ -21,10 +21,13 @@ class KeyboardPlayerPyGame(Player):
 
         self.count = 0
         self.save_dir = "data/images/"
+        os.system(f"rm -rf data/images/*")
         self.sift = cv2.SIFT_create()
-        # self.codebook = pickle.load(open("data/codebook.pkl", "rb")
+        self.codebook = pickle.load(open("codebook.pkl", "rb"))
+        # self.codebook = None
         self.database = []
         self.positions = []
+
         
 
     def reset(self):
@@ -45,10 +48,10 @@ class KeyboardPlayerPyGame(Player):
 
     def act(self):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                self.last_act = Action.QUIT
-                return Action.QUIT
+            # if event.type == pygame.QUIT:
+            #     pygame.quit()
+            #     self.last_act = Action.QUIT
+            #     return Action.QUIT
             
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
@@ -63,9 +66,18 @@ class KeyboardPlayerPyGame(Player):
                 elif event.key == pygame.K_DOWN:
                     self.direction = "reverse"
                     self.last_act = Action.BACKWARD
+                elif event.key == pygame.K_SPACE:
+                    if self.fpv is not None:
+                        train_dir = "data/query_images/"
+                        save_dir_full = os.path.join(os.getcwd(),train_dir)
+                        save_path = save_dir_full + str(self.count) + ".jpg"
+                        cv2.imwrite(save_path, self.fpv)
                 elif event.key == pygame.K_ESCAPE:
                     self.last_act = Action.QUIT
                     self.odom.reset_position()
+                    with open("data/positions.txt", "w") as f:
+                        for pos in self.positions:
+                            f.write(f"{pos[0]},{pos[1]},{pos[2]}\n")
             else:
                 self.direction = ""
                 self.last_act = Action.IDLE
@@ -135,32 +147,54 @@ class KeyboardPlayerPyGame(Player):
         sift_descriptors = list()
         for i in range(length):
             path = str(i) + ".jpg"
-            img= cv2.imread(os.path.join(self.save_dir, path))
+            img = cv2.imread(os.path.join(self.save_dir, path))
             _, des = self.sift.detectAndCompute(img, None)
-            sift_descriptors.append(des)
+            sift_descriptors.extend(des)
         return np.asarray(sift_descriptors)
     
     def get_VLAD(self, img):
         _, des = self.sift.detectAndCompute(img, None)
-        pred_labels = self.codebook.predict(img)
+        pred_labels = self.codebook.predict(des)
         centroids = self.codebook.cluster_centers_
         k = self.codebook.n_clusters
         VLAD_feature = np.zeros([k, des.shape[1]])
 
+        # Loop over the clusters
         for i in range(k):
             if np.sum(pred_labels == i) > 0:
-                VLAD_feature[i] = np.sum(des[pred_labels == i, :] - centroids[i], axis=0)
+                VLAD_feature[i] = np.sum(des[pred_labels==i, :] - centroids[i], axis=0)
         VLAD_feature = VLAD_feature.flatten()
-        VLAD_feature = np.sign(VLAD_feature) * np.sqrt(np.abs(VLAD_feature))
-        VLAD_feature = VLAD_feature / np.linalg.norm(VLAD_feature)
-        return VLAD_feature
+        VLAD_feature = np.sign(VLAD_feature)*np.sqrt(np.abs(VLAD_feature))
+        VLAD_feature = VLAD_feature/np.linalg.norm(VLAD_feature)
+
+        return VLAD_feature    
 
     def pre_exploration(self):
         K = self.get_camera_intrinsic_matrix()
         print(f'K={K}')
 
-    def pre_navigation(self) -> None:
-        pass
+    def get_neighbor(self, img):
+        q_VLAD = self.get_VLAD(img).reshape(1, -1)
+        _, index = self.tree.query(q_VLAD, 1)
+
+    def pre_nav_compute(self):
+        if self.count > 0:
+            sift_descriptors = self.compute_sift_features()
+            if self.codebook is None:
+                self.codebook = KMeans(n_clusters = 64, init='k-means++', n_init=10, verbose=1).fit(sift_descriptors)
+                pickle.dump(self.codebook, open("codebook.pkl", "wb"))    
+                print("Finished creating codebook!")  
+            tree = BallTree(self.database, leaf_size=60)
+            self.tree = tree
+
+            targets = self.get_target_images()
+            # index = self.get_neighbor(targets[0])
+            # self.goal = index
+            # print(f'Goal Position: {self.positions[index]}')
+
+    def pre_navigation(self):
+        super(KeyboardPlayerPyGame, self).pre_navigation()
+        self.pre_nav_compute()
 
     def see(self, fpv):
         if fpv is None or len(fpv.shape) < 3:
@@ -195,12 +229,22 @@ class KeyboardPlayerPyGame(Player):
 
         if self._state:
             if self._state[1] == Phase.EXPLORATION:
-                save_dir_full = os.path.join(os.getcwd(), self.save_dir)
+                save_dir_full = os.path.join(os.getcwd(),self.save_dir)
                 save_path = save_dir_full + str(self.count) + ".jpg"
-            if not os.path.isdir(save_dir_full):
-                os.mkdir(save_dir_full)
-        cv2.imwrite(save_path, fpv)
+ 
+                if not os.path.isdir(save_dir_full):
+                    os.mkdir(save_dir_full)
+                
+                if self.codebook is not None:
+                    VLAD = self.get_VLAD(self.fpv)
+                    self.database.append(VLAD)
+                
+                cv2.imwrite(save_path, fpv)
+                self.positions += [self.odom.get_position()]
+                self.count += 1
 
+        elif self._state == Phase.NAVIGATION:
+            pass
 
 if __name__ == "__main__":
     import logging
